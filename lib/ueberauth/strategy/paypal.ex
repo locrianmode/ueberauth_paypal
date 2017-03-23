@@ -26,7 +26,6 @@ defmodule Ueberauth.Strategy.Paypal do
     # Seems paypal needs client_secret
     token = Paypal.OAuth.get_token!([code: code, client_secret: client_secret], options)
 
-    token = Paypal.OAuth.get_token!([code: code], options)
     handle_token(token, conn)
   end
   def handle_callback!(conn) do
