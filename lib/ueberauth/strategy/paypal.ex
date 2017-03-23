@@ -21,6 +21,11 @@ defmodule Ueberauth.Strategy.Paypal do
 
   def handle_callback!(%Plug.Conn{params: %{"code" => code}} = conn) do
     options = [redirect_uri: callback_url(conn)]
+    [client_id: client_id, client_secret: client_secret, sandbox: sandbox] = Application.get_env(:ueberauth, Ueberauth.Strategy.Paypal.OAuth)
+
+    # Seems paypal needs client_secret
+    token = Paypal.OAuth.get_token!([code: code, client_secret: client_secret], options)
+
     token = Paypal.OAuth.get_token!([code: code], options)
     handle_token(token, conn)
   end
@@ -60,7 +65,7 @@ defmodule Ueberauth.Strategy.Paypal do
   end
 
   def credentials(conn) do
-    token = conn.private.paypal_token
+    token = conn.private.paypal_token.token
     %Credentials{
       expires: !!token.expires_at,
       expires_at: token.expires_at,
@@ -76,7 +81,7 @@ defmodule Ueberauth.Strategy.Paypal do
 
   defp fetch_user(conn, token) do
     token
-    |> OAuth2.AccessToken.get("/v1/identity/openidconnect/userinfo/?schema=openid")
+    |> OAuth2.Client.get("/v1/identity/openidconnect/userinfo/?schema=openid")
     |> handle_response(conn)
   end
 
